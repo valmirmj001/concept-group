@@ -310,7 +310,26 @@ document.addEventListener('DOMContentLoaded', async function() {
     // createElement so they execute, awaiting onload for src scripts to
     // preserve ordering (React before ReactDOM before Babel before text/babel).
     const doc = new DOMParser().parseFromString(template, 'text/html');
+
+    // Gradual handoff: fade the splash out, then fade the real page in.
+    // The whole documentElement is swapped in one synchronous step below,
+    // so neither half of the crossfade can be a CSS transition on the same
+    // node — instead we fade opacity 1->0 on the outgoing root, then set
+    // the incoming root to opacity 0 up front and transition it to 1 once
+    // it's live. Both backgrounds are #0A0A0C, so the brief opaque gap
+    // between the two transitions reads as a continuous fade, not a cut.
+    document.documentElement.style.transition = 'opacity 0.3s ease';
+    document.documentElement.style.opacity = '0';
+    await new Promise(function(r) { setTimeout(r, 300); });
+
+    doc.documentElement.style.opacity = '0';
+    doc.documentElement.style.transition = 'opacity 0.4s ease';
     document.documentElement.replaceWith(doc.documentElement);
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        document.documentElement.style.opacity = '1';
+      });
+    });
 
     // Resolve page-frame markers: mint this document's own blob for each
     // framed page — from local text when this is the root, otherwise by
