@@ -1,0 +1,29 @@
+name: Deploy to Locaweb via FTP
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  ftp-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftp.conceptgroup1.hospedagemdesites.ws
+          username: conceptgroup1
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          protocol: ftp
+          local-dir: ./
+          server-dir: ./public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/README.md
